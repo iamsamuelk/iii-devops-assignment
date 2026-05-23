@@ -1,5 +1,44 @@
 # iii Distributed Inference — DevOps Assignment
 
+## Architecture
+
+```
+                        Internet
+                           |
+                    HTTP :3111 (public)
+                           |
+        +-----------------[V]---------------------+
+        |         GCP VPC - us-central1           |
+        |                                         |
+        |  +----------------------------------+   |
+        |  |  VM1 - iii-gateway (public IP)  |   |
+        |  |  34.173.71.181                  |   |
+        |  |  * iii engine   (ws  :49134)    |   |
+        |  |  * iii-http     (http :3111)    |   |
+        |  |  * iii-state, iii-queue         |   |
+        |  +---------------[|]---------------+   |
+        |               WebSocket :49134          |
+        |         +--------+--------+             |
+        |         |                 |             |
+        |  +-----[V]----------+ +--[V]---------+  |
+        |  | VM2 - inference  | | VM3 - caller |  |
+        |  | 10.0.1.3 priv    | | 10.0.1.2 priv|  |
+        |  | Python worker    | | TypeScript   |  |
+        |  | Gemma-3-270M     | | caller-worker|  |
+        |  | inference::      | | inference::  |  |
+        |  | run_inference    | | get_response |  |
+        |  +------------------+ +--------------+  |
+        +-----------------------------------------+
+
+RPC flow:
+POST /v1/chat/completions
+  -> iii-http (VM1)
+  -> http::run_inference_over_http (VM3 TypeScript)
+  -> inference::get_response (VM3)
+  -> inference::run_inference (VM2 Python)
+  -> Gemma-3-270M generates response
+  -> result returned up the chain
+
 ## API
 
 **Endpoint:** `POST http://34.173.71.181:3111/v1/chat/completions`
