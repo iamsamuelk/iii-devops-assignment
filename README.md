@@ -38,6 +38,7 @@ POST /v1/chat/completions
   -> inference::run_inference (VM2 Python)
   -> Gemma-3-270M generates response
   -> result returned up the chain
+```
 
 ## API
 
